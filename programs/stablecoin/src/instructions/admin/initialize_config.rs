@@ -35,6 +35,7 @@ pub struct InitializeConfig<'info> {
 pub fn process_initialize_config(ctx: Context<InitializeConfig>) -> Result<()> {
     let config_account = &mut ctx.accounts.config_account;
     config_account.authority = ctx.accounts.authority.key();
+    config_account.mint_account = ctx.accounts.mint_account.key();
     config_account.liquidation_threshold = 50; // This means you need to be 200% over-collateralized;
     config_account.liquidation_bonus = 10; // This means you get assets at a 10% discount when liquidating
     config_account.min_health_factor = 1;

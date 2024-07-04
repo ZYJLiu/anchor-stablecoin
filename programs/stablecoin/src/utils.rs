@@ -1,4 +1,6 @@
-use crate::{error::CustomError, Collateral, Config, FEED_ID, MAXIMUM_AGE};
+use crate::{
+    error::CustomError, Collateral, Config, FEED_ID, MAXIMUM_AGE, PRICE_FEED_DECIMAL_ADJUSTMENT,
+};
 use anchor_lang::{prelude::*, solana_program::native_token::LAMPORTS_PER_SOL};
 use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
 
@@ -59,7 +61,7 @@ fn get_usd_value(amount_in_lamports: &u64, price_feed: &Account<PriceUpdateV2>) 
     // Example: Assuming 1 SOL = $2.00
     // price.price = 200_000_000 (from Pyth, 8 decimals)
     // price_in_usd = 200_000_000 * 10 = 2_000_000_000 (9 decimals)
-    let price_in_usd = price.price as u128 * 10;
+    let price_in_usd = price.price as u128 * PRICE_FEED_DECIMAL_ADJUSTMENT;
 
     // Calculate USD value
     // Example: Convert 0.5 SOL to USD when 1 SOL = $2.00
@@ -92,7 +94,7 @@ pub fn get_lamports_from_usd(
     // Example: Assuming 1 SOL = $2.00
     // price.price = 200_000_000 (from Pyth, 8 decimals)
     // price_in_usd = 200_000_000 * 10 = 2_000_000_000 (9 decimals)
-    let price_in_usd = price.price as u128 * 10;
+    let price_in_usd = price.price as u128 * PRICE_FEED_DECIMAL_ADJUSTMENT;
 
     // Calculate lamports
     // Example: Convert $0.50 to lamports when 1 SOL = $2.00

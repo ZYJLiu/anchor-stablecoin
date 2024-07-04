@@ -9,11 +9,11 @@ pub fn withdraw_sol_internal<'info>(
     from: &SystemAccount<'info>,
     to: &AccountInfo<'info>,
     system_program: &Program<'info, System>,
-    depositer_key: &Pubkey,
+    depositor_key: &Pubkey,
     bump: u8,
     amount: u64,
 ) -> Result<()> {
-    let signer_seeds: &[&[&[u8]]] = &[&[SEED_SOL_ACCOUNT, depositer_key.as_ref(), &[bump]]];
+    let signer_seeds: &[&[&[u8]]] = &[&[SEED_SOL_ACCOUNT, depositor_key.as_ref(), &[bump]]];
 
     transfer(
         CpiContext::new_with_signer(

@@ -1,11 +1,10 @@
 use crate::error::CustomError;
 use crate::{
     burn_tokens_internal, calculate_health_factor, get_lamports_from_usd, withdraw_sol_internal,
-    Collateral, Config, SEED_CONFIG_ACCOUNT, SEED_MINT_ACCOUNT,
+    Collateral, Config, SEED_CONFIG_ACCOUNT,
 };
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
-use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 
@@ -18,6 +17,7 @@ pub struct Liquidate<'info> {
     #[account(
         seeds = [SEED_CONFIG_ACCOUNT],
         bump = config_account.bump,
+        has_one = mint_account
     )]
     pub config_account: Account<'info, Config>,
     #[account(
@@ -27,12 +27,7 @@ pub struct Liquidate<'info> {
     pub collateral_account: Account<'info, Collateral>,
     #[account(mut)]
     pub sol_account: SystemAccount<'info>,
-    #[account(
-        mut,
-        seeds = [SEED_MINT_ACCOUNT],
-        bump = config_account.bump_mint_account,
-        mint::token_program = token_program
-    )]
+    #[account(mut)]
     pub mint_account: InterfaceAccount<'info, Mint>,
     #[account(
         mut,
@@ -42,10 +37,10 @@ pub struct Liquidate<'info> {
     )]
     pub token_account: InterfaceAccount<'info, TokenAccount>,
     pub token_program: Program<'info, Token2022>,
-    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
+// https://github.com/Cyfrin/foundry-defi-stablecoin-cu/blob/main/src/DSCEngine.sol#L215
 pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result<()> {
     let health_factor = calculate_health_factor(
         &ctx.accounts.collateral_account,
@@ -61,7 +56,7 @@ pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result
     let lamports = get_lamports_from_usd(&amount_to_burn, &ctx.accounts.price_update)?;
     let liquidation_bonus =
         lamports * ctx.accounts.config_account.liquidation_bonus / LAMPORTS_PER_SOL;
-    let amount_liquidated = lamports + liquidation_bonus;
+    let amount_to_liquidate = lamports + liquidation_bonus;
 
     withdraw_sol_internal(
         &ctx.accounts.sol_account,
@@ -69,7 +64,7 @@ pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result
         &ctx.accounts.system_program,
         &ctx.accounts.liquidator.key(),
         ctx.accounts.collateral_account.bump_sol_account,
-        amount_liquidated,
+        amount_to_liquidate,
     )?;
 
     burn_tokens_internal(
