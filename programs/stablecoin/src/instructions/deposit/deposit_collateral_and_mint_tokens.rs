@@ -1,11 +1,9 @@
 use crate::{
-    check_health_factor, Collateral, Config, SEED_COLLATERAL_ACCOUNT, SEED_CONFIG_ACCOUNT,
-    SEED_MINT_ACCOUNT, SEED_SOL_ACCOUNT,
+    check_health_factor, deposit_sol_internal, mint_tokens_internal, Collateral, Config,
+    SEED_COLLATERAL_ACCOUNT, SEED_CONFIG_ACCOUNT, SEED_MINT_ACCOUNT, SEED_SOL_ACCOUNT,
 };
 use anchor_lang::prelude::*;
-use anchor_lang::system_program::{transfer, Transfer};
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token_2022::{mint_to, MintTo};
 use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 
@@ -65,8 +63,23 @@ pub fn process_deposit_collateral_and_mint_tokens(
         &ctx.accounts.price_update,
     )?;
 
+    deposit_sol_internal(
+        &ctx.accounts.depositer,
+        &ctx.accounts.sol_account,
+        &ctx.accounts.system_program,
+        amount_collateral,
+    )?;
+
+    mint_tokens_internal(
+        &ctx.accounts.mint_account,
+        &ctx.accounts.token_account,
+        &ctx.accounts.token_program,
+        ctx.accounts.config_account.bump_mint_account,
+        amount_to_mint,
+    )?;
+
     let collateral_account = &mut ctx.accounts.collateral_account;
-    collateral_account.lamport_balance += amount_collateral;
+    collateral_account.lamport_balance = ctx.accounts.sol_account.lamports();
     collateral_account.amount_minted += amount_to_mint;
 
     if !collateral_account.is_initialized {
@@ -76,32 +89,6 @@ pub fn process_deposit_collateral_and_mint_tokens(
         collateral_account.bump = ctx.bumps.collateral_account;
         collateral_account.bump_sol_account = ctx.bumps.sol_account;
     }
-
-    transfer(
-        CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.depositer.to_account_info(),
-                to: ctx.accounts.sol_account.to_account_info(),
-            },
-        ),
-        amount_collateral,
-    )?;
-
-    let bump = ctx.accounts.config_account.bump_mint_account;
-    let signer_seeds: &[&[&[u8]]] = &[&[SEED_MINT_ACCOUNT, &[bump]]];
-    mint_to(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            MintTo {
-                mint: ctx.accounts.mint_account.to_account_info(),
-                to: ctx.accounts.token_account.to_account_info(),
-                authority: ctx.accounts.mint_account.to_account_info(),
-            },
-        )
-        .with_signer(signer_seeds),
-        amount_to_mint,
-    )?;
 
     Ok(())
 }

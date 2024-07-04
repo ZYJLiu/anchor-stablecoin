@@ -4,7 +4,7 @@ use anchor_lang::prelude::*;
 pub enum CustomError {
     #[msg("Below Minimum Health Factor")]
     BelowMinimumHealthFactor,
-    #[msg("Above Minimum Health Factor. Cannot Liquidate")]
+    #[msg("Above Minimum Health Factor, Cannot Liquidate")]
     AboveMinimumHealthFactor,
     #[msg("Price should not be negative")]
     InvalidPrice,

@@ -1,11 +1,9 @@
 use crate::{
-    check_health_factor, Collateral, Config, SEED_COLLATERAL_ACCOUNT, SEED_CONFIG_ACCOUNT,
-    SEED_MINT_ACCOUNT, SEED_SOL_ACCOUNT,
+    burn_tokens_internal, check_health_factor, withdraw_sol_internal, Collateral, Config,
+    SEED_COLLATERAL_ACCOUNT, SEED_CONFIG_ACCOUNT, SEED_MINT_ACCOUNT, SEED_SOL_ACCOUNT,
 };
 use anchor_lang::prelude::*;
-use anchor_lang::system_program::{transfer, Transfer};
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token_2022::{burn, Burn};
 use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 
@@ -57,7 +55,7 @@ pub fn process_redeem_collateral_and_burn_tokens(
     amount_to_burn: u64,
 ) -> Result<()> {
     let collateral_account = &mut ctx.accounts.collateral_account;
-    collateral_account.lamport_balance -= amount_collateral;
+    collateral_account.lamport_balance = ctx.accounts.sol_account.lamports() - amount_collateral;
     collateral_account.amount_minted -= amount_to_burn;
 
     check_health_factor(
@@ -66,31 +64,20 @@ pub fn process_redeem_collateral_and_burn_tokens(
         &ctx.accounts.price_update,
     )?;
 
-    let depositer_key = ctx.accounts.depositer.key();
-    let bump = ctx.accounts.collateral_account.bump_sol_account;
-    let signer_seeds: &[&[&[u8]]] = &[&[SEED_SOL_ACCOUNT, depositer_key.as_ref(), &[bump]]];
-
-    transfer(
-        CpiContext::new(
-            ctx.accounts.system_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.depositer.to_account_info(),
-                to: ctx.accounts.sol_account.to_account_info(),
-            },
-        )
-        .with_signer(signer_seeds),
+    withdraw_sol_internal(
+        &ctx.accounts.sol_account,
+        &ctx.accounts.depositer.to_account_info(),
+        &ctx.accounts.system_program,
+        &ctx.accounts.depositer.key(),
+        ctx.accounts.collateral_account.bump_sol_account,
         amount_collateral,
     )?;
 
-    burn(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            Burn {
-                mint: ctx.accounts.mint_account.to_account_info(),
-                from: ctx.accounts.token_account.to_account_info(),
-                authority: ctx.accounts.depositer.to_account_info(),
-            },
-        ),
+    burn_tokens_internal(
+        &ctx.accounts.mint_account,
+        &ctx.accounts.token_account,
+        &ctx.accounts.depositer,
+        &ctx.accounts.token_program,
         amount_to_burn,
     )?;
 

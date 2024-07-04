@@ -33,26 +33,15 @@ pub fn calculate_health_factor(
 
     // Adjust the collateral value for the liquidation threshold
     // Example: (1_000_000_000 * 50) / 100 = 500_000_000
-    let collateral_adjusted_for_threshold =
+    let collateral_adjusted_for_liquidation_threshold =
         (collateral_value_in_usd * config.liquidation_threshold) / 100;
 
     // Calculate the health factor
     // Example: 500_000_000 / 500_000_000 = 1
-    // Effectively, x2 collateral -> 1 health factor
-    let health_factor = (collateral_adjusted_for_threshold) / collateral.amount_minted;
+    let health_factor = (collateral_adjusted_for_liquidation_threshold) / collateral.amount_minted;
 
-    // msg!(
-    //     "config.liquidation_threshold: {:?}",
-    //     config.liquidation_threshold
-    // );
-    // msg!("collateral.amount_minted: {:?}", collateral.amount_minted);
-    // msg!("Collateral Value in USD: {:?}", collateral_value_in_usd);
-    // msg!(
-    //     "Collateral Adjusted for Threshold: {:?}",
-    //     collateral_adjusted_for_threshold
-    // );
     msg!(
-        "Token Amount Minted: {:.9}",
+        "Outstanding Token Amount (Minted): {:.9}",
         collateral.amount_minted as f64 / 1e9
     );
     msg!("Health Factor: {}", health_factor);
@@ -63,7 +52,7 @@ fn get_usd_value(amount_in_lamports: &u64, price_feed: &Account<PriceUpdateV2>) 
     let feed_id = get_feed_id_from_hex(FEED_ID)?;
     let price = price_feed.get_price_no_older_than(&Clock::get()?, MAXIMUM_AGE, &feed_id)?;
 
-    // Check price is positive, its i32
+    // Check price is positive
     require!(price.price > 0, CustomError::InvalidPrice);
 
     // Adjust price to match lamports precision (9 decimals)
@@ -80,10 +69,10 @@ fn get_usd_value(amount_in_lamports: &u64, price_feed: &Account<PriceUpdateV2>) 
     // amount_in_usd = (500_000_000 * 2_000_000_000) / 1_000_000_000 = 1_000_000_000 ($1.00)
     let amount_in_usd = (*amount_in_lamports as u128 * price_in_usd) / (LAMPORTS_PER_SOL as u128);
 
-    msg!("CONVERT USD TO SOL");
+    msg!("*** CONVERT USD TO SOL ***");
     msg!("Price in USD (for 1 SOL): {:.9}", price_in_usd as f64 / 1e9);
     msg!("SOL Amount: {:.9}", *amount_in_lamports as f64 / 1e9);
-    msg!("Calculated USD: {:.9}", amount_in_usd as f64 / 1e9);
+    msg!("USD Value: {:.9}", amount_in_usd as f64 / 1e9);
     // msg!("Price exponent?: {}", price.exponent);
 
     Ok(amount_in_usd as u64)
@@ -96,7 +85,7 @@ pub fn get_lamports_from_usd(
     let feed_id = get_feed_id_from_hex(FEED_ID)?;
     let price = price_feed.get_price_no_older_than(&Clock::get()?, MAXIMUM_AGE, &feed_id)?;
 
-    // Check price is positive, its i32
+    // Check price is positive
     require!(price.price > 0, CustomError::InvalidPrice);
 
     // Adjust price to match lamports precision (9 decimals)
@@ -113,10 +102,10 @@ pub fn get_lamports_from_usd(
     // amount_in_lamports = (500_000_000 * 1_000_000_000) / 2_000_000_000 = 250_000_000 (0.25 SOL)
     let amount_in_lamports = ((*amount_in_usd as u128) * (LAMPORTS_PER_SOL as u128)) / price_in_usd;
 
-    msg!("CONVERT SOL TO USD");
+    msg!("*** CONVERT SOL TO USD ***");
     msg!("Price in USD (for 1 SOL): {:.9}", price_in_usd as f64 / 1e9);
     msg!("USD Amount: {:.9}", *amount_in_usd as f64 / 1e9);
-    msg!("Calculated SOL: {:.9}", amount_in_lamports as f64 / 1e9);
+    msg!("SOL Value: {:.9}", amount_in_lamports as f64 / 1e9);
 
     Ok(amount_in_lamports as u64)
 }

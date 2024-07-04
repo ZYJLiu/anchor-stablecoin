@@ -1,10 +1,9 @@
 use crate::{
-    check_health_factor, Collateral, Config, SEED_COLLATERAL_ACCOUNT, SEED_CONFIG_ACCOUNT,
-    SEED_MINT_ACCOUNT,
+    check_health_factor, mint_tokens_internal, Collateral, Config, SEED_COLLATERAL_ACCOUNT,
+    SEED_CONFIG_ACCOUNT, SEED_MINT_ACCOUNT,
 };
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token_2022::{mint_to, MintTo};
 use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 
@@ -52,18 +51,11 @@ pub fn process_mint_tokens(ctx: Context<MintTokens>, amount_to_mint: u64) -> Res
         &ctx.accounts.price_update,
     )?;
 
-    let bump = ctx.accounts.config_account.bump_mint_account;
-    let signer_seeds: &[&[&[u8]]] = &[&[SEED_MINT_ACCOUNT, &[bump]]];
-    mint_to(
-        CpiContext::new(
-            ctx.accounts.token_program.to_account_info(),
-            MintTo {
-                mint: ctx.accounts.mint_account.to_account_info(),
-                to: ctx.accounts.token_account.to_account_info(),
-                authority: ctx.accounts.mint_account.to_account_info(),
-            },
-        )
-        .with_signer(signer_seeds),
+    mint_tokens_internal(
+        &ctx.accounts.mint_account,
+        &ctx.accounts.token_account,
+        &ctx.accounts.token_program,
+        ctx.accounts.config_account.bump_mint_account,
         amount_to_mint,
     )?;
 
