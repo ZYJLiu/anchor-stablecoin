@@ -108,7 +108,7 @@ describe("stablecoin", () => {
   });
 
   it("Liquidate", async () => {
-    const amountToBurn = 1_300_000_000;
+    const amountToBurn = 1_500_000_000;
     const tx = await program.methods
       .liquidate(new anchor.BN(amountToBurn))
       .accounts({ collateralAccount, priceUpdate: solUsdPriceFeedAccount })

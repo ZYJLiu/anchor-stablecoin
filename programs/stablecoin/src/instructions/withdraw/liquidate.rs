@@ -54,9 +54,13 @@ pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result
     );
 
     let lamports = get_lamports_from_usd(&amount_to_burn, &ctx.accounts.price_update)?;
-    let liquidation_bonus =
-        lamports * ctx.accounts.config_account.liquidation_bonus / LAMPORTS_PER_SOL;
+    let liquidation_bonus = lamports * ctx.accounts.config_account.liquidation_bonus / 100;
     let amount_to_liquidate = lamports + liquidation_bonus;
+
+    msg!("*** LIQUIDATION ***");
+    msg!("Bonus {}%", ctx.accounts.config_account.liquidation_bonus);
+    msg!("Bonus Amount  : {:.9}", liquidation_bonus as f64 / 1e9);
+    msg!("SOL Liquidated: {:.9}", amount_to_liquidate as f64 / 1e9);
 
     withdraw_sol_internal(
         &ctx.accounts.sol_account,
@@ -80,11 +84,11 @@ pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result
     collateral_account.amount_minted -= amount_to_burn;
     // msg!("{:#?}", collateral_account);
 
+    // For logging
     calculate_health_factor(
         &ctx.accounts.collateral_account,
         &ctx.accounts.config_account,
         &ctx.accounts.price_update,
     )?;
-
     Ok(())
 }

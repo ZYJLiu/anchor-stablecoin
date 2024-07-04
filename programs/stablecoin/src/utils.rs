@@ -22,11 +22,6 @@ pub fn calculate_health_factor(
     config: &Account<Config>,
     price_feed: &Account<PriceUpdateV2>,
 ) -> Result<u64> {
-    if collateral.amount_minted == 0 {
-        msg!("Health Factor Max, 0 Tokens Minted");
-        return Ok(u64::MAX);
-    }
-
     // Get the collateral value in USD
     // Assuming 1 SOL = $1.00 and $1 = 1_000_000_000
     // Example: get_usd_value(1_000_000_000 lamports, price_feed)
@@ -38,15 +33,21 @@ pub fn calculate_health_factor(
     let collateral_adjusted_for_liquidation_threshold =
         (collateral_value_in_usd * config.liquidation_threshold) / 100;
 
+    msg!(
+        "Minted Amount : {:.9}",
+        collateral.amount_minted as f64 / 1e9
+    );
+
+    if collateral.amount_minted == 0 {
+        msg!("Health Factor Max");
+        return Ok(u64::MAX);
+    }
+
     // Calculate the health factor
     // Example: 500_000_000 / 500_000_000 = 1
     let health_factor = (collateral_adjusted_for_liquidation_threshold) / collateral.amount_minted;
 
-    msg!(
-        "Outstanding Token Amount (Minted): {:.9}",
-        collateral.amount_minted as f64 / 1e9
-    );
-    msg!("Health Factor: {}", health_factor);
+    msg!("Health Factor : {}", health_factor);
     Ok(health_factor)
 }
 
@@ -71,10 +72,16 @@ fn get_usd_value(amount_in_lamports: &u64, price_feed: &Account<PriceUpdateV2>) 
     // amount_in_usd = (500_000_000 * 2_000_000_000) / 1_000_000_000 = 1_000_000_000 ($1.00)
     let amount_in_usd = (*amount_in_lamports as u128 * price_in_usd) / (LAMPORTS_PER_SOL as u128);
 
+    // EXAMPLE LOGS
+    // Program log: Price in USD (for 1 SOL): 136.194634200
+    // Program log: SOL Amount: 0.500000000
+    // Program log: USD Value: 68.097317100
+    // Program log: Outstanding Token Amount (Minted): 1.500000000
+    // Program log: Health Factor: 22
     msg!("*** CONVERT USD TO SOL ***");
-    msg!("Price in USD (for 1 SOL): {:.9}", price_in_usd as f64 / 1e9);
-    msg!("SOL Amount: {:.9}", *amount_in_lamports as f64 / 1e9);
-    msg!("USD Value: {:.9}", amount_in_usd as f64 / 1e9);
+    msg!("SOL/USD Price : {:.9}", price_in_usd as f64 / 1e9);
+    msg!("SOL Amount    : {:.9}", *amount_in_lamports as f64 / 1e9);
+    msg!("USD Value     : {:.9}", amount_in_usd as f64 / 1e9);
     // msg!("Price exponent?: {}", price.exponent);
 
     Ok(amount_in_usd as u64)
@@ -104,10 +111,15 @@ pub fn get_lamports_from_usd(
     // amount_in_lamports = (500_000_000 * 1_000_000_000) / 2_000_000_000 = 250_000_000 (0.25 SOL)
     let amount_in_lamports = ((*amount_in_usd as u128) * (LAMPORTS_PER_SOL as u128)) / price_in_usd;
 
+    // EXAMPLE LOGS
+    // Program log: *** CONVERT SOL TO USD ***
+    // Program log: Price in USD (for 1 SOL): 136.194634200
+    // Program log: USD Amount: 1.500000000
+    // Program log: SOL Value: 0.011013649
     msg!("*** CONVERT SOL TO USD ***");
-    msg!("Price in USD (for 1 SOL): {:.9}", price_in_usd as f64 / 1e9);
-    msg!("USD Amount: {:.9}", *amount_in_usd as f64 / 1e9);
-    msg!("SOL Value: {:.9}", amount_in_lamports as f64 / 1e9);
+    msg!("SOL/USD Price : {:.9}", price_in_usd as f64 / 1e9);
+    msg!("USD Amount    : {:.9}", *amount_in_usd as f64 / 1e9);
+    msg!("SOL Value     : {:.9}", amount_in_lamports as f64 / 1e9);
 
     Ok(amount_in_lamports as u64)
 }
