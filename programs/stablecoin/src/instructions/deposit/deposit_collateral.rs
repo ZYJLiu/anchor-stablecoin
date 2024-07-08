@@ -34,5 +34,7 @@ pub fn process_deposit_collateral(
     let collateral_account = &mut ctx.accounts.collateral_account;
     collateral_account.lamport_balance = ctx.accounts.sol_account.lamports();
 
+    msg!("{:#?}", ctx.accounts.collateral_account);
+
     Ok(())
 }

@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{
    Mint, Token2022,
 };
-use crate::{Config, SEED_CONFIG_ACCOUNT, SEED_MINT_ACCOUNT};
+use crate::{Config, LIQUIDATION_BONUS, LIQUIDATION_THRESHOLD, MINT_DECIMALS, MIN_HEALTH_FACTOR, SEED_CONFIG_ACCOUNT, SEED_MINT_ACCOUNT};
 
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
@@ -22,7 +22,7 @@ pub struct InitializeConfig<'info> {
         payer = authority,
         seeds = [SEED_MINT_ACCOUNT],
         bump,
-        mint::decimals = 9,
+        mint::decimals = MINT_DECIMALS,
         mint::authority = mint_account,
         mint::freeze_authority = mint_account,
         mint::token_program = token_program
@@ -33,14 +33,16 @@ pub struct InitializeConfig<'info> {
 }
 
 pub fn process_initialize_config(ctx: Context<InitializeConfig>) -> Result<()> {
-    let config_account = &mut ctx.accounts.config_account;
-    config_account.authority = ctx.accounts.authority.key();
-    config_account.mint_account = ctx.accounts.mint_account.key();
-    config_account.liquidation_threshold = 50; // This means you need to be 200% over-collateralized;
-    config_account.liquidation_bonus = 10; // This means you get assets at a 10% discount when liquidating
-    config_account.min_health_factor = 1;
-    config_account.bump = ctx.bumps.config_account;
-    config_account.bump_mint_account = ctx.bumps.mint_account;
+    *ctx.accounts.config_account = Config {
+        authority: ctx.accounts.authority.key(),
+        mint_account: ctx.accounts.mint_account.key(),
+        liquidation_threshold: LIQUIDATION_THRESHOLD,
+        liquidation_bonus: LIQUIDATION_BONUS,
+        min_health_factor: MIN_HEALTH_FACTOR,
+        bump: ctx.bumps.config_account,
+        bump_mint_account:  ctx.bumps.mint_account,
+    };
+    msg!("{:#?}", ctx.accounts.config_account);
     Ok(())
 }
 

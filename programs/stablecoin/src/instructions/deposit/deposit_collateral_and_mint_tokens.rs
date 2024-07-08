@@ -67,6 +67,21 @@ pub fn process_deposit_collateral_and_mint_tokens(
         collateral_account.bump_sol_account = ctx.bumps.sol_account;
     }
 
+    // if !collateral_account.is_initialized {
+    //     **collateral_account = Collateral {
+    //         is_initialized: true,
+    //         depositor: ctx.accounts.depositor.key(),
+    //         sol_account: ctx.accounts.sol_account.key(),
+    //         token_account: ctx.accounts.token_account.key(),
+    //         lamport_balance: collateral_account.amount_minted,
+    //         amount_minted: amount_to_mint,
+    //         bump: ctx.bumps.collateral_account,
+    //         bump_sol_account: ctx.bumps.sol_account,
+    //     };
+    // }
+
+    msg!("{:#?}", ctx.accounts.collateral_account);
+
     check_health_factor(
         &ctx.accounts.collateral_account,
         &ctx.accounts.config_account,

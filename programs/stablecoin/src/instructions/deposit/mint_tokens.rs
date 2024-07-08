@@ -53,5 +53,7 @@ pub fn process_mint_tokens(ctx: Context<MintTokens>, amount_to_mint: u64) -> Res
     let collateral_account = &mut ctx.accounts.collateral_account;
     collateral_account.amount_minted += amount_to_mint;
 
+    msg!("{:#?}", ctx.accounts.collateral_account);
+
     Ok(())
 }
