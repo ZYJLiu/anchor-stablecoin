@@ -1,8 +1,10 @@
 use crate::SEED_MINT_ACCOUNT;
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer, Transfer};
-use anchor_spl::token_2022::{mint_to, MintTo};
-use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
+use anchor_spl::{
+    token_2022::{mint_to, MintTo},
+    token_interface::{Mint, Token2022, TokenAccount},
+};
 
 pub fn mint_tokens_internal<'info>(
     mint_account: &InterfaceAccount<'info, Mint>,

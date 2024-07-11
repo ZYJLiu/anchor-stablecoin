@@ -46,33 +46,6 @@ describe("stablecoin", () => {
     console.log("Your transaction signature", tx);
   });
 
-  it("Deposit Collateral", async () => {
-    const amountCollateral = 1_000_000_000;
-    const tx = await program.methods
-      .depositCollateral(new anchor.BN(amountCollateral))
-      .accounts({ priceUpdate: solUsdPriceFeedAccount })
-      .rpc({ skipPreflight: true, commitment: "confirmed" });
-    console.log("Your transaction signature", tx);
-  });
-
-  it("Mint USDS", async () => {
-    const amountToMint = 1_000_000_000;
-    const tx = await program.methods
-      .mintTokens(new anchor.BN(amountToMint))
-      .accounts({ priceUpdate: solUsdPriceFeedAccount })
-      .rpc({ skipPreflight: true, commitment: "confirmed" });
-    console.log("Your transaction signature", tx);
-  });
-
-  it("Redeem Collateral", async () => {
-    const amountCollateral = 1_000_000_000;
-    const tx = await program.methods
-      .redeemCollateral(new anchor.BN(amountCollateral))
-      .accounts({ priceUpdate: solUsdPriceFeedAccount })
-      .rpc({ skipPreflight: true, commitment: "confirmed" });
-    console.log("Your transaction signature", tx);
-  });
-
   it("Redeem Collateral and Burn USDS", async () => {
     const amountCollateral = 500_000_000;
     const amountToBurn = 500_000_000;
@@ -86,17 +59,17 @@ describe("stablecoin", () => {
     console.log("Your transaction signature", tx);
   });
 
-  // increase min health threshold to test liquidate
+  // Increase minimum health threshold to test liquidate
   it("Update Config", async () => {
     const tx = await program.methods
-      .updateConfig(new anchor.BN(1000))
+      .updateConfig(new anchor.BN(100))
       .accounts({})
       .rpc({ skipPreflight: true, commitment: "confirmed" });
     console.log("Your transaction signature", tx);
   });
 
   it("Liquidate", async () => {
-    const amountToBurn = 1_000_000_000;
+    const amountToBurn = 500_000_000;
     const tx = await program.methods
       .liquidate(new anchor.BN(amountToBurn))
       .accounts({ collateralAccount, priceUpdate: solUsdPriceFeedAccount })

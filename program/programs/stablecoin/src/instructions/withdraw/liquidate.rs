@@ -1,10 +1,8 @@
-use crate::error::CustomError;
 use crate::{
-    burn_tokens_internal, calculate_health_factor, get_lamports_from_usd, withdraw_sol_internal,
-    Collateral, Config, SEED_CONFIG_ACCOUNT,
+    burn_tokens_internal, calculate_health_factor, error::CustomError, get_lamports_from_usd,
+    withdraw_sol_internal, Collateral, Config, SEED_CONFIG_ACCOUNT,
 };
 use anchor_lang::prelude::*;
-use anchor_lang::solana_program::native_token::LAMPORTS_PER_SOL;
 use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
 use pyth_solana_receiver_sdk::price_update::PriceUpdateV2;
 
@@ -82,9 +80,8 @@ pub fn process_liquidate(ctx: Context<Liquidate>, amount_to_burn: u64) -> Result
     let collateral_account = &mut ctx.accounts.collateral_account;
     collateral_account.lamport_balance = ctx.accounts.sol_account.lamports();
     collateral_account.amount_minted -= amount_to_burn;
-    // msg!("{:#?}", collateral_account);
 
-    // For logging
+    // Optional, logs new health factor
     calculate_health_factor(
         &ctx.accounts.collateral_account,
         &ctx.accounts.config_account,

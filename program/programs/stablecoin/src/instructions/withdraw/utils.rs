@@ -1,9 +1,10 @@
+use crate::SEED_SOL_ACCOUNT;
 use anchor_lang::prelude::*;
 use anchor_lang::system_program::{transfer, Transfer};
-use anchor_spl::token_2022::{burn, Burn};
-use anchor_spl::token_interface::{Mint, Token2022, TokenAccount};
-
-use crate::SEED_SOL_ACCOUNT;
+use anchor_spl::{
+    token_2022::{burn, Burn},
+    token_interface::{Mint, Token2022, TokenAccount},
+};
 
 pub fn withdraw_sol_internal<'info>(
     from: &SystemAccount<'info>,

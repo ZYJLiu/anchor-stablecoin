@@ -22,7 +22,6 @@ pub struct RedeemCollateralAndBurnTokens<'info> {
         mut,
         seeds = [SEED_COLLATERAL_ACCOUNT, depositor.key().as_ref()],
         bump = collateral_account.bump,
-        // has_one = depositor,
         has_one = sol_account,
         has_one = token_account
     )]

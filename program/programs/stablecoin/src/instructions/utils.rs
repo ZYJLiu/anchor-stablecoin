@@ -4,18 +4,12 @@ use crate::{
 use anchor_lang::{prelude::*, solana_program::native_token::LAMPORTS_PER_SOL};
 use pyth_solana_receiver_sdk::price_update::{get_feed_id_from_hex, PriceUpdateV2};
 
+// Check health factor for Collateral account is greater than minimum required health factor
 pub fn check_health_factor(
     collateral: &Account<Collateral>,
     config: &Account<Config>,
     price_feed: &Account<PriceUpdateV2>,
 ) -> Result<()> {
-    let unix = &Clock::get()?.unix_timestamp;
-    let feed_id = get_feed_id_from_hex(FEED_ID)?;
-    let feed = price_feed.get_price_unchecked(&feed_id)?;
-    msg!("Unix: {}", unix);
-    msg!("Pricefeed: {:?}", feed.publish_time);
-    msg!("Diff: {:?}", unix - feed.publish_time);
-
     let health_factor = calculate_health_factor(collateral, config, price_feed)?;
     require!(
         health_factor >= config.min_health_factor,
@@ -24,6 +18,7 @@ pub fn check_health_factor(
     Ok(())
 }
 
+// Calcuate health factor for a given Collateral account
 pub fn calculate_health_factor(
     collateral: &Account<Collateral>,
     config: &Account<Config>,
@@ -35,7 +30,7 @@ pub fn calculate_health_factor(
     // collateral_value_in_usd = 1_000_000_000
     let collateral_value_in_usd = get_usd_value(&collateral.lamport_balance, price_feed)?;
 
-    // Adjust the collateral value for the liquidation threshold
+    // Adjust the collateral value for the liquidation threshold (require overcollateralize)
     // Example: (1_000_000_000 * 50) / 100 = 500_000_000
     let collateral_adjusted_for_liquidation_threshold =
         (collateral_value_in_usd * config.liquidation_threshold) / 100;
@@ -51,6 +46,7 @@ pub fn calculate_health_factor(
     }
 
     // Calculate the health factor
+    // Ratio of (adjusted collateral value) / (amount stablecoins minted)
     // Example: 500_000_000 / 500_000_000 = 1
     let health_factor = (collateral_adjusted_for_liquidation_threshold) / collateral.amount_minted;
 
@@ -58,6 +54,7 @@ pub fn calculate_health_factor(
     Ok(health_factor)
 }
 
+// Given lamports, return USD value based on current SOL price.
 fn get_usd_value(amount_in_lamports: &u64, price_feed: &Account<PriceUpdateV2>) -> Result<u64> {
     let feed_id = get_feed_id_from_hex(FEED_ID)?;
     let price = price_feed.get_price_no_older_than(&Clock::get()?, MAXIMUM_AGE, &feed_id)?;
@@ -94,6 +91,7 @@ fn get_usd_value(amount_in_lamports: &u64, price_feed: &Account<PriceUpdateV2>) 
     Ok(amount_in_usd as u64)
 }
 
+// Given USD amount, return lamports based on current SOL price
 pub fn get_lamports_from_usd(
     amount_in_usd: &u64,
     price_feed: &Account<PriceUpdateV2>,
