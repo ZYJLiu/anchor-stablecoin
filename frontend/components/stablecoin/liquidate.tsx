@@ -8,14 +8,17 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { useConfig } from "../providers/config-account-provider";
 import { usePythPrice } from "../providers/pyth-pricefeed-provider";
-import { calculateHealthFactor, getLamportsFromUsd } from "@/app/utils";
+import {
+  calculateHealthFactor,
+  getLamportsFromUsd,
+  BASE_UNIT,
+} from "@/app/utils";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { program } from "@/anchor/setup";
 import { BN } from "@coral-xyz/anchor";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useCollateral } from "../providers/collateral-account-provider";
-
-const BASE_UNIT = 1e9;
+import { useTransactionToast } from "./toast";
 
 interface SelectedAccount {
   pubkey: PublicKey;
@@ -28,6 +31,7 @@ interface LiquidateUIProps {
   selectedAccount: SelectedAccount;
 }
 
+// UI to invoke liquidate instruction
 const LiquidateUI: React.FC<LiquidateUIProps> = ({ selectedAccount }) => {
   const [liquidateAmount, setLiquidateAmount] = useState(0);
   const [maxLiquidateAmount, setMaxLiquidateAmount] = useState(0);
@@ -44,6 +48,7 @@ const LiquidateUI: React.FC<LiquidateUIProps> = ({ selectedAccount }) => {
   const { solPriceFeed, solUsdPriceFeedAccount } = usePythPrice();
   const { connection } = useConnection();
   const { publicKey, connected, sendTransaction } = useWallet();
+  const { showTransactionToast } = useTransactionToast();
 
   const updateCalculations = useCallback(() => {
     if (solPriceFeed && config && selectedAccount) {
@@ -124,18 +129,16 @@ const LiquidateUI: React.FC<LiquidateUIProps> = ({ selectedAccount }) => {
           liquidator: publicKey,
           collateralAccount: selectedAccount.pubkey,
           priceUpdate: solUsdPriceFeedAccount,
-          // Add other necessary accounts here
         })
         .transaction();
 
       const transactionSignature = await sendTransaction(tx, connection, {
         skipPreflight: true,
       });
-
       await connection.confirmTransaction(transactionSignature, "confirmed");
-      console.log("Transaction signature", transactionSignature);
+      refetchCollateralAccount(selectedAccount.pubkey);
+      showTransactionToast(transactionSignature);
       resetAmounts();
-      await refetchCollateralAccount(selectedAccount.pubkey);
     } catch (err) {
       console.error("Error during liquidation:", err);
       setError("Liquidation failed. Please try again.");

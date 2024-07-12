@@ -13,6 +13,7 @@ const SOL_USD_PRICE_FEED_ACCOUNT = new PublicKey(
   "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE",
 );
 
+// Shared state for pyth price feed
 interface PythPriceContextType {
   solPriceFeed: PriceFeed | null;
   solUsdPriceFeedAccount: PublicKey;
@@ -41,26 +42,22 @@ export function PythPriceProvider({ children }: { children: React.ReactNode }) {
     const priceServiceConnection = new PriceServiceConnection(
       "https://hermes.pyth.network",
     );
-    let isMounted = true;
 
     const fetchInitialPrice = async () => {
       try {
         const priceFeed = await priceServiceConnection.getLatestPriceFeeds([
           SOL_PRICE_FEED_ID,
         ]);
-        if (isMounted) {
-          if (priceFeed && priceFeed.length > 0) {
-            setSolPriceFeed(priceFeed[0]);
-          } else {
-            setError("No price feeds returned");
-          }
-          setIsLoading(false);
+
+        if (priceFeed && priceFeed.length > 0) {
+          setSolPriceFeed(priceFeed[0]);
+        } else {
+          setError("No price feeds returned");
         }
+        setIsLoading(false);
       } catch (err) {
-        if (isMounted) {
-          setError("Failed to fetch initial SOL price");
-          setIsLoading(false);
-        }
+        setError("Failed to fetch initial SOL price");
+        setIsLoading(false);
       }
     };
 
@@ -69,14 +66,11 @@ export function PythPriceProvider({ children }: { children: React.ReactNode }) {
     priceServiceConnection.subscribePriceFeedUpdates(
       [SOL_PRICE_FEED_ID],
       (priceFeed) => {
-        if (isMounted) {
-          setSolPriceFeed(priceFeed);
-        }
+        setSolPriceFeed(priceFeed);
       },
     );
 
     return () => {
-      isMounted = false;
       priceServiceConnection.closeWebSocket();
     };
   }, []);

@@ -5,6 +5,7 @@ import { useConnection } from "@solana/wallet-adapter-react";
 import { AccountInfo } from "@solana/web3.js";
 import { program, configPDA, ConfigAccount } from "@/anchor/setup";
 
+// Shared state for program config account
 interface ConfigContextType {
   config: ConfigAccount | null;
   isLoading: boolean;

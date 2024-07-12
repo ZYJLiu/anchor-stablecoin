@@ -15,6 +15,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { program } from "@/anchor/setup";
 import { BN } from "@coral-xyz/anchor";
 
+// UI to invoke updateConfig instruction, can be invoked by anyone to test liquidation
 const UpdateConfigUI = () => {
   const [configValue, setConfigValue] = useState(100);
   const [error, setError] = useState("");

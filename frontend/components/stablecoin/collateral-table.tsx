@@ -21,12 +21,14 @@ import LiquidateUI from "./liquidate";
 interface SelectedAccount {
   pubkey: PublicKey;
   lamportBalanceInSol: number;
+  lamportBalanceInUsd: number;
   amountMintedInUsd: number;
   healthFactor: number;
 }
 
+// Display all collateral accounts on liquidation page
 const CollateralAccountsTable = () => {
-  const { allCollateralAccounts, isLoading, error } = useCollateral();
+  const { allCollateralAccounts } = useCollateral();
   const { solPriceFeed } = usePythPrice();
   const { config } = useConfig();
   const [selectedAccount, setSelectedAccount] =
@@ -52,6 +54,7 @@ const CollateralAccountsTable = () => {
       return {
         pubkey: account.publicKey,
         lamportBalanceInSol,
+        lamportBalanceInUsd,
         amountMintedInUsd,
         healthFactor,
       };
@@ -69,9 +72,6 @@ const CollateralAccountsTable = () => {
       }
     }
   }, [accountsData, selectedAccount]);
-
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
 
   return (
     <div>
@@ -97,7 +97,8 @@ const CollateralAccountsTable = () => {
                     <AddressLink pubkey={account.pubkey} />
                   </TableCell>
                   <TableCell>
-                    {account.lamportBalanceInSol.toFixed(3)}
+                    {account.lamportBalanceInSol.toFixed(3)} ($
+                    {account.lamportBalanceInUsd.toFixed(2)})
                   </TableCell>
                   <TableCell>${account.amountMintedInUsd.toFixed(2)}</TableCell>
                   <TableCell

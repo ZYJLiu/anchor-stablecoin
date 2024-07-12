@@ -8,15 +8,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useConfig } from "../providers/config-account-provider";
 import { useCollateral } from "../providers/collateral-account-provider";
 import { usePythPrice } from "../providers/pyth-pricefeed-provider";
-import { calculateHealthFactor, getUsdValue } from "@/app/utils";
+import { calculateHealthFactor, getUsdValue, BASE_UNIT } from "@/app/utils";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { program } from "@/anchor/setup";
 import { BN } from "@coral-xyz/anchor";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { Loader2 } from "lucide-react";
+import { useTransactionToast } from "./toast";
 
-const BASE_UNIT = 1e9;
-
+// UI to invoke depositCollateralAndMint instruction
 const CollateralMintUI = () => {
   const [depositAmount, setDepositAmount] = useState(0);
   const [mintAmount, setMintAmount] = useState(0);
@@ -24,11 +24,13 @@ const CollateralMintUI = () => {
   const [healthFactor, setHealthFactor] = useState(0);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
   const { config } = useConfig();
   const { collateral } = useCollateral();
   const { solPriceFeed, solUsdPriceFeedAccount } = usePythPrice();
   const { connection } = useConnection();
   const { publicKey, connected, sendTransaction } = useWallet();
+  const { showTransactionToast } = useTransactionToast();
 
   const updateCalculations = useCallback(() => {
     if (solPriceFeed && config) {
@@ -112,9 +114,8 @@ const CollateralMintUI = () => {
         skipPreflight: true,
       });
       console.log("Transaction signature", transactionSignature);
-
+      showTransactionToast(transactionSignature);
       resetAmounts();
-      // Handle successful transaction (e.g., show success message, update UI)
     } catch (err) {
       console.error("Error depositing collateral and minting:", err);
       // setError("Failed to deposit collateral and mint tokens");
@@ -146,8 +147,8 @@ const CollateralMintUI = () => {
           onValueChange={(value) => handleMintAmountChange(value[0])}
         />
         <div className="text-sm text-muted-foreground">
-          ${(mintAmount / LAMPORTS_PER_SOL).toFixed(2)} / $
-          {(maxMintAmount / LAMPORTS_PER_SOL).toFixed(2)}
+          ${(mintAmount / BASE_UNIT).toFixed(2)} / $
+          {(maxMintAmount / BASE_UNIT).toFixed(2)}
         </div>
       </div>
       <div className="flex flex-col space-y-1.5">

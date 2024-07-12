@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CollateralMintUI from "@/components/stablecoin/deposit";
 import RedeemBurnUI from "@/components/stablecoin/withdraw";
 
+// deposit/withdraw widget
 const DepositWithdrawUI = () => {
   const [mode, setMode] = useState("deposit");
 

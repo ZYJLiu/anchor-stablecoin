@@ -1,7 +1,8 @@
 import { PriceFeed } from "@pythnetwork/price-service-client";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
-const PRICE_FEED_DECIMAL_ADJUSTMENT = 10;
+const PRICE_FEED_DECIMAL_ADJUSTMENT = 10; // price feed 1e8, adjust to same base unit as SOL
+export const BASE_UNIT = LAMPORTS_PER_SOL; // 1e9
 
 export function calculateHealthFactor(
   lamportBalance: number,

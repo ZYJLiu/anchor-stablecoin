@@ -11,6 +11,7 @@ import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { AccountInfo, PublicKey } from "@solana/web3.js";
 import { program, CollateralAccount } from "@/anchor/setup";
 
+// Shared state for program collateral accounts
 interface CollateralContextType {
   collateral: CollateralAccount | null;
   collateralAccountPDA: PublicKey | null;
@@ -75,17 +76,13 @@ export function CollateralProvider({
   };
 
   const refetchCollateralAccount = useCallback(async (pubkey: PublicKey) => {
-    console.log(pubkey);
     try {
       const account = await program.account.collateral.fetch(pubkey);
-      console.log(account);
       setAllCollateralAccounts((prevAccounts) => {
         const index = prevAccounts.findIndex((a) => a.publicKey.equals(pubkey));
         if (index !== -1) {
           const newAccounts = [...prevAccounts];
           newAccounts[index] = { publicKey: pubkey, account };
-
-          console.log(newAccounts[index]);
           return newAccounts;
         }
         return prevAccounts;

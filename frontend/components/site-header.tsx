@@ -1,11 +1,8 @@
 "use client";
 
-import Link from "next/link";
-
 import { siteConfig } from "@/config/site";
 import { MainNav } from "@/components/main-nav";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-// import { ThemeToggle } from "@/components/theme-toggle";
 
 export function SiteHeader() {
   return (

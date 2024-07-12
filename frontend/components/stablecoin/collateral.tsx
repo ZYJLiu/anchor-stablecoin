@@ -9,19 +9,7 @@ import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const InfoRow = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: React.ReactNode;
-}) => (
-  <TableRow>
-    <TableCell className="font-medium">{label}</TableCell>
-    <TableCell className="text-right">{value}</TableCell>
-  </TableRow>
-);
-
+// Display connected wallet's collateral account on deposit/withdraw page
 const CollateralAccountDisplay = () => {
   const { collateral, collateralAccountPDA, isLoading, error } =
     useCollateral();
@@ -141,6 +129,19 @@ const CollateralAccountDisplay = () => {
 };
 
 export default CollateralAccountDisplay;
+
+const InfoRow = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) => (
+  <TableRow>
+    <TableCell className="font-medium">{label}</TableCell>
+    <TableCell className="text-right">{value}</TableCell>
+  </TableRow>
+);
 
 const AddressLink = ({ pubkey }: { pubkey: PublicKey }) => {
   const address = pubkey.toString();

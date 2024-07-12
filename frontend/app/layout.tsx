@@ -9,6 +9,7 @@ import { SolanaWalletProvider } from "@/components/providers/wallet-provider";
 import { ConfigProvider } from "@/components/providers/config-account-provider";
 import { CollateralProvider } from "@/components/providers/collateral-account-provider";
 import { PythPriceProvider } from "@/components/providers/pyth-pricefeed-provider";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -43,6 +44,7 @@ export default function RootLayout({
                   <div className="relative flex min-h-screen flex-col">
                     <SiteHeader />
                     <div className="flex-1">{children}</div>
+                    <Toaster />
                   </div>
                 </ThemeProvider>
               </PythPriceProvider>

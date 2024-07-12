@@ -9,15 +9,15 @@ import { Switch } from "@/components/ui/switch";
 import { useConfig } from "../providers/config-account-provider";
 import { useCollateral } from "../providers/collateral-account-provider";
 import { usePythPrice } from "../providers/pyth-pricefeed-provider";
-import { calculateHealthFactor } from "@/app/utils";
+import { calculateHealthFactor, BASE_UNIT } from "@/app/utils";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { program } from "@/anchor/setup";
 import { BN } from "@coral-xyz/anchor";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { Loader2 } from "lucide-react";
+import { useTransactionToast } from "./toast";
 
-const BASE_UNIT = 1e9;
-
+// UI to invoke redeemCollateralAndBurnTokens instruction
 const RedeemBurnUI = () => {
   const [burnAmount, setBurnAmount] = useState(0);
   const [redeemAmount, setRedeemAmount] = useState(0);
@@ -26,11 +26,13 @@ const RedeemBurnUI = () => {
   const [error, setError] = useState("");
   const [isMaxRedeem, setIsMaxRedeem] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const { config } = useConfig();
   const { collateral, collateralAccountPDA } = useCollateral();
   const { solPriceFeed, solUsdPriceFeedAccount } = usePythPrice();
   const { connection } = useConnection();
   const { publicKey, connected, sendTransaction } = useWallet();
+  const { showTransactionToast } = useTransactionToast();
 
   const updateCalculations = useCallback(() => {
     if (solPriceFeed && config && collateral) {
@@ -116,9 +118,8 @@ const RedeemBurnUI = () => {
         skipPreflight: true,
       });
       console.log("Transaction signature", transactionSignature);
-
+      showTransactionToast(transactionSignature);
       resetAmounts();
-      // Handle successful transaction (e.g., show success message, update UI)
     } catch (err) {
       console.error("Error redeeming collateral and burning tokens:", err);
       //   setError("Failed to redeem collateral and burn tokens");
@@ -147,15 +148,15 @@ const RedeemBurnUI = () => {
         <Slider
           id="redeemAmount"
           max={maxRedeemAmount}
-          //   step={LAMPORTS_PER_SOL / 100}
+          step={LAMPORTS_PER_SOL / 1e6}
           value={[redeemAmount]}
           onValueChange={(value) => handleRedeemAmountChange(value[0])}
           disabled={isMaxRedeem}
         />
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            {(redeemAmount / LAMPORTS_PER_SOL).toFixed(4)} /
-            {(maxRedeemAmount / LAMPORTS_PER_SOL).toFixed(4)} SOL
+            {(redeemAmount / LAMPORTS_PER_SOL).toFixed(3)} /
+            {(maxRedeemAmount / LAMPORTS_PER_SOL).toFixed(3)} SOL
           </div>
           <div className="flex items-center space-x-2">
             <Switch
